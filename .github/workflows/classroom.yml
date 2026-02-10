@@ -1,0 +1,33 @@
+name: Automatic code check
+on: push
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
+      - name: Install elm
+        run: |
+          curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
+          gunzip elm.gz
+          chmod +x elm
+          sudo mv elm /usr/local/bin/
+          elm --help
+      - name: Install elm-format elm-test elm-review
+        run: |
+          npm install -g elm-test elm-format elm-review
+      - name: Validate format
+        run: |
+          elm-format src/ --validate
+      - name: Run checks
+        run: |
+          elm-review \
+          --template jfmengels/elm-review-common/example \
+          --rules NoMissingTypeAnnotation,NoMissingTypeAnnotationInLetIn
+      - name: Build
+        run: |
+          elm make src/*
+      - name: Run tests
+        run: |
+          elm-test
